@@ -3,10 +3,10 @@
 
 cmake_minimum_required(VERSION 2.8.11)
 
-project(iot-hub-c-raspberrypi-getstartedkit)
+project(azure-remote-monitoring-raspberry-pi-c)
 
 option(use_amqp_kit "use samples provided in the kit" ON)
 
-add_subdirectory(azure-iot-sdk-c)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../azure-iot-sdk-c ${CMAKE_CURRENT_BINARY_DIR}/azure-iot-sdk-c)
 
 add_subdirectory(samples)

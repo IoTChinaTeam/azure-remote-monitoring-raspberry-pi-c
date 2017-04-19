@@ -29,7 +29,7 @@ IF(WIN32)
 ENDIF(WIN32)
 
 include_directories(. ${IOTHUB_CLIENT_INC_FOLDER})
-include_directories(../../azure-iot-sdk-c/parson)
+include_directories(../../../azure-iot-sdk-c/parson)
 
 link_directories(${whatIsBuilding}_dll ${SHARED_UTIL_LIB_DIR})
 
