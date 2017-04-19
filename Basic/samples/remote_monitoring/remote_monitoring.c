@@ -211,10 +211,12 @@ void UpdateReportedProperties(const char* format, ...)
 void ApplyFirmware()
 {
 	system("unzip -o remote_monitoring.zip -d cmake/samples/remote_monitoring/");
-	system("sudo chmod +x firmwareupdate.sh");
+	system("sudo mv cmake/samples/remote_monitoring/firmwarereboot.sh .");
+	system("sudo chmod +x firmwarereboot.sh");
+	system("sed -i 's/\r//' firmwarereboot.sh");
 	system("sudo chmod +x cmake/samples/remote_monitoring/remote_monitoring");
 	system("rm -f remote_monitoring.zip");
-	system("nohup ./firmwareupdate.sh > /dev/null 2>&1 &");
+	system("sudo nohup sh ./firmwarereboot.sh > /tmp/reboot.txt &");
 }
 
 void* FirmwareUpdateThread(void* arg)
@@ -267,6 +269,9 @@ void* FirmwareUpdateThread(void* arg)
 		"{ 'Method' : { 'UpdateFirmware': { 'Applied' : { 'Duration-s': 0, 'LastUpdate': '%s', 'Status': 'Running' } } } }",
 		FormatTime(&stepBegin));
 
+	printf("unlock file before apply new firmware\r\n");
+	close_lockfile(Lock_fd);
+
 	ApplyFirmware();
 
 	time(&stepEnd);
@@ -285,7 +290,7 @@ void* FirmwareUpdateThread(void* arg)
 	strcpy(lastRebootBegin, rebootBegin);
 	WriteConfig();
 	free(arg);
-	return NULL;
+	exit(0);
 }
 
 METHODRETURN_HANDLE InitiateFirmwareUpdate(Thermostat* thermostat, ascii_char_ptr FwPackageURI)
