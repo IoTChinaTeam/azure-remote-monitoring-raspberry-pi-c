@@ -157,7 +157,7 @@ void LoadConfig()
 {
 	FILE* fp;
 
-	if (NULL == (fp = fopen("//home//pi//azure-remote-monitoring-raspberry-pi-c//advanced//config//deviceInfo", "r")))
+	if (NULL == (fp = fopen("//home//pi//azure-remote-monitoring-raspberry-pi-c//advanced//config//deviceinfo", "r")))
 	{
 		printf("Failed to open deviceInfo file to read\r\n");
 	}
