@@ -9,4 +9,4 @@ option(use_amqp_kit "use samples provided in the kit" ON)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../azure-iot-sdk-c ${CMAKE_CURRENT_BINARY_DIR}/azure-iot-sdk-c)
 
-add_subdirectory(samples)
+add_subdirectory(remote_monitoring)

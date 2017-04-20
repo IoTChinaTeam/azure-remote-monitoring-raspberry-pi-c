@@ -23,8 +23,5 @@ add_library(
   aziotplatform ${platform_c_files} ${platform_h_files}
 )
 
-if(WIN32)
-else()
-  install (TARGETS aziotplatform DESTINATION lib)
-  install (FILES ${platform_h_files} DESTINATION include/azureiot/platform_specific)
-endif (WIN32)
+install (TARGETS aziotplatform DESTINATION lib)
+install (FILES ${platform_h_files} DESTINATION include/azureiot/platform_specific)

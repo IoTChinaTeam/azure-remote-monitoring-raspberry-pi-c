@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#define _XOPEN_SOURCE
 #include "iothubtransportmqtt.h"
 #include "schemalib.h"
 #include "iothub_client.h"
@@ -81,11 +80,27 @@ WITH_REPORTED_PROPERTY(ascii_char_ptr_no_quotes, SupportedMethods)
 
 END_NAMESPACE(Contoso);
 
+/* Callback after sending reported properties */
+void deviceTwinCallback(int status_code, void* userContextCallback)
+{
+	(void)(userContextCallback);
+	printf("IoTHub: reported properties delivered with status_code = %u\n", status_code);
+}
+
 void onDesiredTelemetryInterval(void* argument)
 {
 	/* By convention 'argument' is of the type of the MODEL */
 	Thermostat* thermostat = argument;
 	printf("Received a new desired_TelemetryInterval = %d\r\n", thermostat->TelemetryInterval);
+	thermostat->Config.TelemetryInterval = thermostat->TelemetryInterval;
+	if (IoTHubDeviceTwin_SendReportedStateThermostat(thermostat, deviceTwinCallback, NULL) != IOTHUB_CLIENT_OK)
+	{
+		printf("Report Config.TelemetryInterval property failed");
+	}
+	else
+	{
+		printf("Report new value of Config.TelemetryInterval property: %d\r\n", thermostat->Config.TelemetryInterval);
+	}
 }
 
 /*change light status on Raspberry Pi to received value*/
@@ -137,13 +152,6 @@ static void sendMessage(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const unsigned 
 		IoTHubMessage_Destroy(messageHandle);
 	}
 	free((void*)buffer);
-}
-
-/* Callback after sending reported properties */
-void deviceTwinCallback(int status_code, void* userContextCallback)
-{
-	(void)(userContextCallback);
-	printf("IoTHub: reported properties delivered with status_code = %u\n", status_code);
 }
 
 void remote_monitoring_run(void)

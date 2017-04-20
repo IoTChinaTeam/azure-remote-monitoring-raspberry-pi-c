@@ -5,19 +5,17 @@
 
 compileAsC99()
 
-if(NOT ${use_amqp_kit})
-	message(FATAL_ERROR "remote_monitoring being generated without amqp support")
-endif()
+set(PLATFORM_INC_FOLDER ${CMAKE_CURRENT_LIST_DIR}/platform_specific/inc CACHE INTERNAL "this is what needs to be included if using bme280 sensor and locked file lib" FORCE)
+
+include_directories(${SERIALIZER_INC_FOLDER} ${SHARED_UTIL_INC_FOLDER} ${PLATFORM_INC_FOLDER})
+
+add_subdirectory(platform_specific)
 
 set(remote_monitoring_c_files
 	remote_monitoring.c
 )
 
-if(WIN32)
-	set(remote_monitoring_c_files ${remote_monitoring_c_files})
-else()
-	set(remote_monitoring_c_files ${remote_monitoring_c_files})
-endif()
+set(remote_monitoring_c_files ${remote_monitoring_c_files})
 
 set(remote_monitoring_h_files
 	remote_monitoring.h
@@ -29,12 +27,7 @@ IF(WIN32)
 ENDIF(WIN32)
 
 include_directories(. ${IOTHUB_CLIENT_INC_FOLDER})
-include_directories(../../../azure-iot-sdk-c/parson)
-
-link_directories(${whatIsBuilding}_dll ${SHARED_UTIL_LIB_DIR})
+include_directories(../../azure-iot-sdk-c/parson)
 
 add_executable(remote_monitoring ${remote_monitoring_c_files} ${remote_monitoring_h_files})
 target_link_libraries(remote_monitoring serializer iothub_client iothub_client_mqtt_transport aziotplatform wiringPi)
-
-linkSharedUtil(remote_monitoring)
-linkUAMQP(remote_monitoring)
