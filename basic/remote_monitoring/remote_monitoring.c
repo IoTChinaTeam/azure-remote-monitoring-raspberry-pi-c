@@ -153,7 +153,7 @@ static void sendMessage(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const unsigned 
 
 void SendDeviceInfo(IOTHUB_CLIENT_HANDLE iotHubClientHandle)
 {
-	char* buffer = malloc(sizeof(char) * 256);
+	char* buffer = malloc(sizeof(char) * 512);
 	sprintf(buffer, deviceInfo, deviceId);
 	printf("send device info: %s %d\r\n", buffer, strlen(buffer));
 	sendMessage(iotHubClientHandle, buffer, strlen(buffer));
@@ -177,8 +177,8 @@ void SendTelemetryData(IOTHUB_CLIENT_HANDLE iotHubClientHandle)
 		printf("Read Sensor Data Failed, send simulated data Humidity = %.1f%% Temperature = %.1f*C \n", humidityPct, tempC);
 	}
 
-	char* buffer = malloc(sizeof(char) * 512);
-	sprintf(buffer, telemetryData, deviceId, humidityPct, tempC);
+	char* buffer = malloc(sizeof(char) * 256);
+	sprintf(buffer, telemetryData, deviceId, tempC , humidityPct);
 	printf("Sending sensor value: %s %d\r\n", buffer, strlen(buffer));
 	sendMessage(iotHubClientHandle, buffer, strlen(buffer));
 }

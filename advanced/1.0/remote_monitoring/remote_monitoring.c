@@ -28,6 +28,20 @@
 static char* deviceId;
 static char* connectionString;
 
+static const char* deviceInfo = "{ \"ObjectType\": \"DeviceInfo\","
+"\"IsSimulatedDevice\": 0,"
+"\"Version\" : '1.0',"
+"\"DeviceProperties\" :"
+"{\"DeviceID\": \"%s\", \"TelemetryInterval\" : 1, \"HubEnabledState\" : true},"
+"\"Telemetry\" : ["
+"{\"Name\": \"Temperature\", \"DisplayName\" : \"Temperature\", \"Type\" : \"double\"},"
+"{ \"Name\": \"Humidity\", \"DisplayName\" : \"Humidity\", \"Type\" : \"double\" }] }";
+
+static const char* telemetryData = "{"
+"\"DeviceID\": \"%s\","
+"\"Temperature\" : %f,"
+"\"Humidity\" : %f } ";
+
 static char* lastUpdateBegin;
 static char* lastRebootBegin;
 
@@ -57,24 +71,7 @@ DECLARE_MODEL(ConfigProperties,
 WITH_REPORTED_PROPERTY(uint8_t, TelemetryInterval)
 );
 
-/* Part of DeviceInfo */
-DECLARE_STRUCT(DeviceProperties,
-ascii_char_ptr, DeviceID,
-_Bool, HubEnabledState
-);
-
 DECLARE_DEVICETWIN_MODEL(Thermostat,
-/* Telemetry (temperature, external temperature and humidity) */
-WITH_DATA(double, Temperature),
-WITH_DATA(double, Humidity),
-WITH_DATA(ascii_char_ptr, DeviceId),
-
-/* DeviceInfo */
-WITH_DATA(ascii_char_ptr, ObjectType),
-WITH_DATA(_Bool, IsSimulatedDevice),
-WITH_DATA(ascii_char_ptr, Version),
-WITH_DATA(DeviceProperties, DeviceProperties),
-
 /* Device twin properties */
 WITH_REPORTED_PROPERTY(ConfigProperties, Config),
 WITH_REPORTED_PROPERTY(SystemProperties, System),
@@ -467,6 +464,38 @@ static void sendMessage(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const unsigned 
 	free((void*)buffer);
 }
 
+void SendDeviceInfo(IOTHUB_CLIENT_HANDLE iotHubClientHandle)
+{
+	char* buffer = malloc(sizeof(char) * 512);
+	sprintf(buffer, deviceInfo, deviceId);
+	printf("send device info: %s %d\r\n", buffer, strlen(buffer));
+	sendMessage(iotHubClientHandle, buffer, strlen(buffer));
+}
+
+void SendTelemetryData(IOTHUB_CLIENT_HANDLE iotHubClientHandle)
+{
+	float tempC = -300.0;
+	float pressurePa = -300;
+	float humidityPct = -300;
+
+	int sensorResult = bme280_read_sensors(&tempC, &pressurePa, &humidityPct);
+
+	if (sensorResult == 1)
+	{
+		printf("Read Sensor Data: Humidity = %.1f%% Temperature = %.1f*C \n",
+			humidityPct, tempC);
+	}
+	else
+	{
+		printf("Read Sensor Data Failed, send simulated data Humidity = %.1f%% Temperature = %.1f*C \n", humidityPct, tempC);
+	}
+
+	char* buffer = malloc(sizeof(char) * 256);
+	sprintf(buffer, telemetryData, deviceId, tempC, humidityPct);
+	printf("Sending sensor value: %s %d\r\n", buffer, strlen(buffer));
+	sendMessage(iotHubClientHandle, buffer, strlen(buffer));
+}
+
 void remote_monitoring_run(void)
 {
 	if (platform_init() != 0)
@@ -518,64 +547,15 @@ void remote_monitoring_run(void)
 					{
 						UpdateFirmwareComplete();
 						printf("Send DeviceInfo object to IoT Hub at startup\n");
-						thermostat->ObjectType = "DeviceInfo";
-						thermostat->IsSimulatedDevice = 0;
-						thermostat->Version = "1.0";
-						thermostat->DeviceProperties.HubEnabledState = 1;
-						thermostat->DeviceProperties.DeviceID = deviceId;
 
-						unsigned char* buffer;
-						size_t bufferSize;
-
-						if (SERIALIZE(&buffer, &bufferSize, thermostat->ObjectType, thermostat->Version, thermostat->IsSimulatedDevice, thermostat->DeviceProperties) != CODEFIRST_OK)
-						{
-							(void)printf("Failed serializing DeviceInfo\n");
-						}
-						else
-						{
-							sendMessage(iotHubClientHandle, buffer, bufferSize);
-							printf("Twin json string is: %s\r\n", buffer);
-						}
-
-						/* Send telemetry */
-						thermostat->Temperature = 50;
-						thermostat->Humidity = 50;
+						SendDeviceInfo(iotHubClientHandle);
+						
+						/* set default telemetry interval */
 						thermostat->TelemetryInterval = 3;
-						thermostat->DeviceId = deviceId;
 
 						while (1)
 						{
-							unsigned char* buffer;
-							size_t bufferSize;
-							float tempC = -300.0;
-							float pressurePa = -300;
-							float humidityPct = -300;
-
-							int sensorResult = bme280_read_sensors(&tempC, &pressurePa, &humidityPct);
-
-							if (sensorResult == 1)
-							{
-								thermostat->Temperature = tempC;
-								thermostat->Humidity = humidityPct;
-								printf("Read Sensor Data: Humidity = %.1f%% Temperature = %.1f*C \n",
-									humidityPct, tempC);
-							}
-							else
-							{
-								thermostat->Temperature = 50;
-								thermostat->Humidity = 50;
-							}
-
-							(void)printf("Sending sensor value Temperature = %f, Humidity = %f\n", thermostat->Temperature, thermostat->Humidity);
-
-							if (SERIALIZE(&buffer, &bufferSize, thermostat->DeviceId, thermostat->Temperature, thermostat->Humidity) != CODEFIRST_OK)
-							{
-								(void)printf("Failed sending sensor value\r\n");
-							}
-							else
-							{
-								sendMessage(iotHubClientHandle, buffer, bufferSize);
-							}
+							SendTelemetryData(iotHubClientHandle);
 
 							ThreadAPI_Sleep(thermostat->TelemetryInterval * 1000);
 						}
