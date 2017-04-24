@@ -96,6 +96,7 @@ void deviceTwinCallback(int status_code, void* userContextCallback)
 	printf("IoTHub: reported properties delivered with status_code = %u\n", status_code);
 }
 
+/*Callback for desired property changed*/
 void onDesiredTelemetryInterval(void* argument)
 {
 	/* By convention 'argument' is of the type of the MODEL */
@@ -188,7 +189,6 @@ void LoadConfig()
 	}
 	else
 	{
-		int length = 0;
 		char buffer[256] = { 0 };
 		for (int i = 0; i < 2; i++)
 		{
@@ -209,38 +209,6 @@ void LoadConfig()
 	}
 }
 
-bool GetNumberFromString(const unsigned char* text, size_t size, int* pValue)
-{
-	const unsigned char* pStart = text;
-	for (; pStart < text + size; pStart++)
-	{
-		if (isdigit(*pStart))
-		{
-			break;
-		}
-	}
-
-	const unsigned char* pEnd = pStart + 1;
-	for (; pEnd <= text + size; pEnd++)
-	{
-		if (!isdigit(*pEnd))
-		{
-			break;
-		}
-	}
-
-	if (pStart >= text + size)
-	{
-		return false;
-	}
-
-	unsigned char buffer[16] = { 0 };
-	strncpy(buffer, pStart, pEnd - pStart);
-
-	*pValue = atoi(buffer);
-	return true;
-}
-
 char* FormatTime(time_t* time)
 {
 	static char buffer[128];
@@ -252,7 +220,7 @@ char* FormatTime(time_t* time)
 	return buffer;
 }
 
-//download file in Git hub repo via wget as example
+//download file in target url by wget as example
 bool DownloadFile(ascii_char_ptr url)
 {
 	printf("Download url: %s\r\n", url);
@@ -291,7 +259,7 @@ void UpdateReportedProperties(const char* format, ...)
 	free(report);
 }
 
-//unzip the target package to the specify folder, then move it the downloaded file
+//this method is an example for apply firmware
 void ApplyFirmware()
 {
 	system("unzip -o remote_monitoring.zip -d cmake/remote_monitoring/");
@@ -409,6 +377,7 @@ void UpdateFirmwareComplete()
 	}
 }
 
+/*Callback for InitiateFirmwareUpdate*/
 METHODRETURN_HANDLE InitiateFirmwareUpdate(Thermostat* thermostat, ascii_char_ptr FwPackageURI)
 {
 	(void)(thermostat);
@@ -423,6 +392,7 @@ METHODRETURN_HANDLE InitiateFirmwareUpdate(Thermostat* thermostat, ascii_char_pt
 	return result;
 }
 
+/*Callback for LightBlink*/
 METHODRETURN_HANDLE LightBlink(Thermostat* thermostat)
 {
 	int blinkCount = 2;
