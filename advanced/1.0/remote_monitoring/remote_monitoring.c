@@ -168,13 +168,14 @@ void LoadConfig()
 			if (fgets(line, sizeof(line), fp)) {
 				if (i == 0)
 				{
-					line[(int)(strlen(line) - 1)] = '\0';
 					deviceId = strdup(line);
+					deviceId = strtok(deviceId, "\n");
 					printf("read device id: %s\r\n", deviceId);
 				}
 				else
 				{
 					connectionString = strdup(line);
+					connectionString = strtok(connectionString, "\n");
 					printf("read connection string: %s\r\n", connectionString);
 				}
 			}
