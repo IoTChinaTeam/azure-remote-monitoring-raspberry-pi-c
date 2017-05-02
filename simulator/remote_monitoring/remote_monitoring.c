@@ -9,6 +9,9 @@
 #include "azure_c_shared_utility/threadapi.h"
 #include "azure_c_shared_utility/platform.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 static const char* deviceId = "[Device Id]";
 static const char* connectionString = "HostName=[IoTHub Name].azure-devices.net;DeviceId=[Device Id];SharedAccessKey=[Device Key]";
 
@@ -131,8 +134,8 @@ void SendDeviceInfo(IOTHUB_CLIENT_HANDLE iotHubClientHandle)
 
 void SendTelemetryData(IOTHUB_CLIENT_HANDLE iotHubClientHandle)
 {
-	float tempC = 50.0;
-	float humidityPct = 25.0;
+	float tempC = (float)rand() / (float)(RAND_MAX / 5) + 25;
+	float humidityPct = (float)rand() / (float)(RAND_MAX / 5) + 15;
 
 	printf("send simulated data Humidity = %.1f%% Temperature = %.1f*C \n", humidityPct, tempC);
 
